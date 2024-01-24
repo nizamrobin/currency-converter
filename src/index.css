@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .filter-accent {
+    filter: invert(23%) sepia(82%) saturate(2479%) hue-rotate(240deg)
+      brightness(80%) contrast(90%);
+  }
+}
