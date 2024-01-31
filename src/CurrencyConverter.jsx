@@ -4,14 +4,49 @@ import BtnSwitch from "./BtnSwitch";
 
 export default function CurrencyConverter() {
   const [currencyDB, setcurrencyDB] = useState(null); // currency details fetch from API
+  const [currencyOptions, setCurrencyOptions] = useState([]);
+  const [fromCurrencyId, setFromCurrencyId] = useState();
+  const [toCurrencyId, setToCurrencyId] = useState();
+  const [fromCurrencyName, setFromCurrencyName] = useState();
+  const [toCurrencyName, setToCurrencyName] = useState();
+
   const [exchangeRates, setExchangeRates] = useState(null); // set exchange rates from API
   const [exchangeValueFrom, setExchangeValueFrom] = useState(1); // set exchange value
   const [exchangeValueTo, setExchangeValueTo] = useState(1.09); // set exchange value
   const [ExchangeIdFrom, setExchangeIdFrom] = useState("USD"); //Exchange id code like USD, EUR
   const [ExchangeIdTo, setExchangeIdTo] = useState("EUR"); //Exchange id code like USD, EUR
 
+  const currencyURL =
+    "https://api.freecurrencyapi.com/v1/currencies?apikey=fca_live_WvRyy0w6431rb0ophS7XESZugPknhooLfOVOkGK6";
+
+  // fetch currency db from API call
+  useEffect(() => {
+    const f = async () => {
+      const response = await fetch(currencyURL).then((res) => res.json());
+      return response;
+    };
+    f().then((res) => {
+      const dbObj = JSON.parse(JSON.stringify(res.data));
+      const dbArray = [];
+      for (let item in dbObj) {
+        dbArray.push(dbObj[item]);
+      }
+      setcurrencyDB(dbArray);
+      setCurrencyOptions([...Object.keys(res.data)]);
+      setFromCurrencyId(Object.keys(res.data)[1]);
+      setToCurrencyId(Object.keys(res.data)[0]);
+      setFromCurrencyName(dbArray[1].name);
+      setToCurrencyName(dbArray[0].name);
+    });
+    // console.log(f().then((res) => console.log(Object.keys(res.data))));
+  }, []);
+
+  const handleCurrency = (id, name, value) => {
+    console.log(id, name, value);
+  };
+
   const handleValue = (flag, referrence) => {
-    console.log(referrence.current.id, referrence.current.value);
+    // console.log(referrence.current.id, referrence.current.value);
     if (ExchangeIdFrom === ExchangeIdTo) {
       // console.log("1");
       setExchangeValueFrom(referrence.current.value);
@@ -64,32 +99,6 @@ export default function CurrencyConverter() {
     const flag = "updateValue";
     handleValue(flag, referrence);
   };
-  // fetch currency db from API call
-  useEffect(() => {
-    const url =
-      "https://api.freecurrencyapi.com/v1/currencies?apikey=fca_live_WvRyy0w6431rb0ophS7XESZugPknhooLfOVOkGK6";
-
-    try {
-      fetch(url)
-        .then((response) => response.json())
-        .then((d) => {
-          const a = JSON.stringify(d.data);
-          const b = JSON.parse(a);
-          // create array from fetched api json and assigned to currencyDB state
-          const res = [];
-          for (let i in b) {
-            res.push(b[i]);
-          }
-          setcurrencyDB(res);
-        });
-    } catch (error) {
-      console.error(error);
-    }
-  }, []);
-
-  // useEffect(() => {
-  //   handleExchange();
-  // }, [ExchangeIdFrom, ExchangeIdTo, handleExchange]);
 
   // fetch latest exchange rates from api call and assigned to exchangedRates state
   useEffect(() => {
@@ -113,22 +122,28 @@ export default function CurrencyConverter() {
         <h2>{`${ExchangeIdFrom} ${ExchangeIdTo}`}</h2>
         {currencyDB !== null && (
           <CurrencyCard
-            exchangeId={handleIdFrom}
-            value={exchangeValueFrom}
-            arr={currencyDB}
-            handleExchange={handleExchangeFrom}
-            defaultValue={"US Dollar"}
+            currencyDB={currencyDB}
+            currencyOptions={currencyOptions}
+            currencyId={fromCurrencyId}
+            currencyName={fromCurrencyName}
+            handleCurrency={handleCurrency}
+            // value={exchangeValueFrom}
+            // handleExchange={handleExchangeFrom}
+            // defaultValue={"US Dollar"}
           />
         )}
         <BtnSwitch />
         {currencyDB !== null && (
           <CurrencyCard
-            exchangeId={handleIdTo}
-            value={exchangeValueTo}
-            arr={currencyDB}
-            handleExchange={handleExchangeTo}
-            defaultValue={"Euro"}
+            currencyDB={currencyDB}
+            currencyOptions={currencyOptions}
+            currencyId={toCurrencyId}
+            currencyName={toCurrencyName}
+            handleCurrency={handleCurrency}
             classes={"flex-col-reverse"}
+            // value={exchangeValueTo}
+            // handleExchange={handleExchangeTo}
+            // defaultValue={"Euro"}
           />
         )}
       </section>
