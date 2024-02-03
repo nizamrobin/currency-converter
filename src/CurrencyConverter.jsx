@@ -4,20 +4,24 @@ import BtnSwitch from "./BtnSwitch";
 
 export default function CurrencyConverter() {
   const [currencyDB, setcurrencyDB] = useState(null); // currency details fetch from API
-  const [currencyOptions, setCurrencyOptions] = useState([]);
+  const [exchangeRates, setExchangeRates] = useState(null); // set exchange rates from API
+
+  const reff = useRef("");
+  const reft = useRef("");
+
   const [fromCurrencyId, setFromCurrencyId] = useState();
   const [toCurrencyId, setToCurrencyId] = useState();
   const [fromCurrencyName, setFromCurrencyName] = useState();
   const [toCurrencyName, setToCurrencyName] = useState();
-
-  const [exchangeRates, setExchangeRates] = useState(null); // set exchange rates from API
-  const [exchangeValueFrom, setExchangeValueFrom] = useState(1); // set exchange value
-  const [exchangeValueTo, setExchangeValueTo] = useState(1.09); // set exchange value
-  const [ExchangeIdFrom, setExchangeIdFrom] = useState("USD"); //Exchange id code like USD, EUR
-  const [ExchangeIdTo, setExchangeIdTo] = useState("EUR"); //Exchange id code like USD, EUR
+  const [fromCurrencySymbol, setFromCurrencySymbol] = useState();
+  const [toCurrencySymbol, setToCurrencySymbol] = useState();
+  const [fromCurrencyValue, setFromCurrencyValue] = useState(1);
+  const [toCurrencyValue, setToCurrencyValue] = useState(0.93);
 
   const currencyURL =
-    "https://api.freecurrencyapi.com/v1/currencies?apikey=fca_live_WvRyy0w6431rb0ophS7XESZugPknhooLfOVOkGK6";
+    "https://api.freecurrencyapi.com/v1/currencies?apikey=fca_live_ez90wL17LjD3xpqABtrBRl7R2YatlrIppQbTSj44";
+  const exchangeRateUrl =
+    "https://api.freecurrencyapi.com/v1/latest?apikey=fca_live_ez90wL17LjD3xpqABtrBRl7R2YatlrIppQbTSj44";
 
   // fetch currency db from API call
   useEffect(() => {
@@ -32,123 +36,138 @@ export default function CurrencyConverter() {
         dbArray.push(dbObj[item]);
       }
       setcurrencyDB(dbArray);
-      setCurrencyOptions([...Object.keys(res.data)]);
-      setFromCurrencyId(Object.keys(res.data)[1]);
-      setToCurrencyId(Object.keys(res.data)[0]);
+      const firstCurrency = Object.keys(res.data)[1];
+      const secondCurrency = Object.keys(res.data)[0];
+      setFromCurrencyId(firstCurrency);
+      setToCurrencyId(secondCurrency);
       setFromCurrencyName(dbArray[1].name);
       setToCurrencyName(dbArray[0].name);
+      setFromCurrencySymbol(dbArray[1].symbol);
+      setToCurrencySymbol(dbArray[0].symbol);
+      // setFromCurrencyValue(1);
     });
-    // console.log(f().then((res) => console.log(Object.keys(res.data))));
   }, []);
-
-  const handleCurrency = (id, name, value) => {
-    console.log(id, name, value);
-  };
-
-  const handleValue = (flag, referrence) => {
-    // console.log(referrence.current.id, referrence.current.value);
-    if (ExchangeIdFrom === ExchangeIdTo) {
-      // console.log("1");
-      setExchangeValueFrom(referrence.current.value);
-      setExchangeValueTo(referrence.current.value);
-    }
-    if (ExchangeIdFrom !== ExchangeIdTo) {
-      if (ExchangeIdTo === referrence.current.id) {
-        // console.log("2");
-        setExchangeValueTo(referrence.current.value);
-        setExchangeValueFrom(
-          (
-            (referrence.current.value / exchangeRates[ExchangeIdFrom]) *
-            exchangeRates[ExchangeIdTo]
-          ).toFixed(2)
-        );
-      }
-      if (ExchangeIdFrom === referrence.current.id) {
-        // console.log("3");
-        setExchangeValueFrom(referrence.current.value);
-        setExchangeValueTo(
-          (
-            (referrence.current.value / exchangeRates[ExchangeIdTo]) *
-            exchangeRates[ExchangeIdFrom]
-          ).toFixed(2)
-        );
-      }
-    }
-  };
-  const handleIdFrom = (id, ref) => {
-    // console.log("handledIdFrom");
-    const flag = "idFrom";
-    setExchangeIdFrom(id);
-    handleValue(flag, ref);
-  };
-  const handleIdTo = (id, ref) => {
-    // console.log("handledIdTo");
-    const flag = "idTo";
-    setExchangeIdTo(id);
-    handleValue(flag, ref);
-  };
-  // calculate the exchange currency value and set to input field of the other currencyCard component
-  const handleExchangeFrom = (referrence) => {
-    console.log("input1");
-    const flag = "updateValue";
-    handleValue(flag, referrence);
-  };
-
-  const handleExchangeTo = (referrence) => {
-    console.log("input2");
-    const flag = "updateValue";
-    handleValue(flag, referrence);
-  };
 
   // fetch latest exchange rates from api call and assigned to exchangedRates state
   useEffect(() => {
-    const url =
-      "https://api.freecurrencyapi.com/v1/latest?apikey=fca_live_WvRyy0w6431rb0ophS7XESZugPknhooLfOVOkGK6";
-    async function exchangeRates() {
-      const response = await fetch(url);
-      const exchangeRates = await response.json();
-      return exchangeRates;
+    async function exchangeRateData() {
+      const response = await fetch(exchangeRateUrl);
+      const exchangeRateData = await response.json();
+      return exchangeRateData;
     }
-    exchangeRates().then((data) => setExchangeRates(data.data));
+    exchangeRateData().then((data) => setExchangeRates(data.data));
   }, []);
+
+  // Handling re-rendering based on the change of the states
+  useEffect(() => {
+    // if (!fromCurrencyValue && exchangeRates) {
+    //   setFromCurrencyValue(exchangeRates[`${fromCurrencyId}`]);
+    // } else {
+    // exchangeRates && setFromCurrencyValue(fromCurrencyValue);
+    // const a = ref.current;
+    // console.log("f-t", reft.current.value, toCurrencyValue);
+    if (
+      exchangeRates &&
+      Math.abs(
+        toCurrencyValue -
+          (fromCurrencyValue / exchangeRates[`${fromCurrencyId}`]) *
+            exchangeRates[`${toCurrencyId}`]
+      ) > 0.05
+    ) {
+      setToCurrencyValue(
+        Math.round(
+          (fromCurrencyValue / exchangeRates[`${fromCurrencyId}`]) *
+            exchangeRates[`${toCurrencyId}`] *
+            100
+        ) / 100
+      );
+    }
+  }, [exchangeRates, fromCurrencyId, fromCurrencyValue, toCurrencyId]);
+
+  useEffect(() => {
+    // console.log("t-f", reff.current.value, fromCurrencyValue);
+    // exchangeRates && setToCurrencyValue(toCurrencyValue);
+    // setToCurrencyValue(reft.current.value);
+    // exchangeRates &&
+    if (
+      exchangeRates &&
+      Math.abs(
+        fromCurrencyValue -
+          (toCurrencyValue / exchangeRates[`${toCurrencyId}`]) *
+            exchangeRates[`${fromCurrencyId}`]
+      ) > 0.05
+    ) {
+      setFromCurrencyValue(
+        Math.round(
+          (toCurrencyValue / exchangeRates[`${toCurrencyId}`]) *
+            exchangeRates[`${fromCurrencyId}`] *
+            100
+        ) / 100
+      );
+    }
+  }, [exchangeRates, toCurrencyValue]);
+
+  // function for handling changing the value of inputs
+  const handleValue = (id, value) => {
+    if (id === fromCurrencyId) {
+      setFromCurrencyValue(value);
+    } else if (id === toCurrencyId) {
+      setToCurrencyValue(value);
+    }
+  };
+
+  // functions for handling the changing of the currency codes
+  const handleCurrencyFrom = (id, name, symbol) => {
+    setFromCurrencyId(id);
+    setFromCurrencyName(name);
+    setFromCurrencySymbol(symbol);
+  };
+  const handleCurrencyTo = (id, name, symbol) => {
+    setToCurrencyId(id);
+    setToCurrencyName(name);
+    setToCurrencySymbol(symbol);
+  };
 
   // JSX
   return (
-    <div className="container bg-slate-200 p-4">
-      {/* <Nav /> */}
+    currencyDB &&
+    fromCurrencyId &&
+    toCurrencyId && (
+      <div className="container bg-slate-200 p-4">
+        {/* <Nav /> */}
 
-      {/* Main section */}
-      <section className="main relative gap-4">
-        <h2>{`${ExchangeIdFrom} ${ExchangeIdTo}`}</h2>
-        {currencyDB !== null && (
-          <CurrencyCard
-            currencyDB={currencyDB}
-            currencyOptions={currencyOptions}
-            currencyId={fromCurrencyId}
-            currencyName={fromCurrencyName}
-            handleCurrency={handleCurrency}
-            // value={exchangeValueFrom}
-            // handleExchange={handleExchangeFrom}
-            // defaultValue={"US Dollar"}
-          />
-        )}
-        <BtnSwitch />
-        {currencyDB !== null && (
-          <CurrencyCard
-            currencyDB={currencyDB}
-            currencyOptions={currencyOptions}
-            currencyId={toCurrencyId}
-            currencyName={toCurrencyName}
-            handleCurrency={handleCurrency}
-            classes={"flex-col-reverse"}
-            // value={exchangeValueTo}
-            // handleExchange={handleExchangeTo}
-            // defaultValue={"Euro"}
-          />
-        )}
-      </section>
+        {/* Main section */}
+        <section className="main relative gap-4">
+          {currencyDB !== null && (
+            <CurrencyCard
+              ref={reff}
+              currencyDB={currencyDB}
+              currencyId={fromCurrencyId}
+              currencyName={fromCurrencyName}
+              currencySymbol={fromCurrencySymbol}
+              exchangeValue={fromCurrencyValue}
+              handleValue={handleValue}
+              handleCurrency={handleCurrencyFrom}
+            />
+          )}
+          <BtnSwitch />
+          {currencyDB !== null && (
+            <CurrencyCard
+              ref={reft}
+              currencyDB={currencyDB}
+              currencyId={toCurrencyId}
+              currencyName={toCurrencyName}
+              currencySymbol={toCurrencySymbol}
+              exchangeValue={toCurrencyValue}
+              handleCurrency={handleCurrencyTo}
+              handleValue={handleValue}
+              classes={"flex-col-reverse"}
+            />
+          )}
+        </section>
 
-      {/* <FooterNav /> */}
-    </div>
+        {/* <FooterNav /> */}
+      </div>
+    )
   );
 }

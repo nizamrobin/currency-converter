@@ -1,38 +1,35 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { forwardRef, useCallback, useEffect, useRef, useState } from "react";
 
-export default function CurrencyCard({
-  currencyDB,
-  currencyOptions,
-  currencyId,
-  currencyName,
-  handleCurrency,
-  classes,
-  // arr,
-  // handleExchange,
-  // value,
-  // defaultValue,
-}) {
-  // console.log(currencyId, currencyName, currencyDB);
-  // const [currencyName, setCurrencyName] = useState(defaultValue);
-  // const [currencyID, setCurrencyID] = useState();
-  // const [currencyData, setCurrencyData] = useState();
-  // const ref = useRef("");
-  // console.log(currencyDB);
-  // set currnecy name to currencyName state
+const CurrencyCard = forwardRef(function CurrencyCard(
+  {
+    currencyDB,
+    currencyId,
+    currencyName,
+    currencySymbol,
+    exchangeValue,
+    handleCurrency,
+    handleValue,
+    classes,
+  },
+  ref
+) {
+  // To fix the uncontrolled behavior of input field. (if no value is set, the input field behaves like uncontrolled. To avoid this, exchangeValue is set to state and placed in use effect so that when the exchangeValue props will be available the val is updated)
+  const [val, setVal] = useState(exchangeValue);
+  useEffect(() => {
+    // console.log(exchangeValue);
+    setVal(exchangeValue);
+  }, [exchangeValue]);
 
   // set currency data and return exchangeId depending on the selection of option of currency list
-  useEffect(
+  const currencyFeedback = useCallback(
     (e) => {
-      handleCurrency(e.currentTarget.value, null, null);
-      // currencyOptions.map((item) => {
-      //   if (currencyName === item.name) {
-      //     setCurrencyData(item);
-      //     setCurrencyID(item.code);
-      //     // exchangeId(item.code, ref);
-      //   }
-      // });
+      currencyDB.map((item) => {
+        if (e.target.value == item.name) {
+          handleCurrency(item.code, item.name, item.symbol);
+        }
+      });
     },
-    [currencyName, arr]
+    [currencyDB, handleCurrency]
   );
 
   return (
@@ -47,7 +44,7 @@ export default function CurrencyCard({
           className="bg-transparent"
           id={currencyId}
           value={currencyName}
-          onChange={handleCurrency}
+          onChange={currencyFeedback}
         >
           {/* populate currency items to option of select tag */}
           {currencyDB.map((item) => (
@@ -63,12 +60,35 @@ export default function CurrencyCard({
         </select>
       </div>
       <div className="mt-4 p-1 flex items-baseline text-accent font-light">
-        <span className="text-2xl">{}</span>
+        <span className="text-2xl">{currencySymbol}</span>
         {/* {currencyData && ( */}
-        <input id={currencyId} type="number" className="text-5xl w-1/2" />
+        <input
+          ref={ref}
+          id={currencyId}
+          type="number"
+          className="text-5xl w-1/2"
+          value={val}
+          maxLength={2}
+          onChange={(e) => {
+            handleValue(e.currentTarget.id, e.currentTarget.value);
+          }}
+        />
         {/* )} */}
       </div>
     </div>
   );
-  // );
-}
+});
+// export default function CurrencyCard({
+//   currencyDB,
+//   currencyId,
+//   currencyName,
+//   currencySymbol,
+//   exchangeValue,
+//   handleCurrency,
+//   handleValue,
+//   classes,
+// }) {
+
+//   // );
+// }
+export default CurrencyCard;
