@@ -1,13 +1,11 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect } from "react";
 import CurrencyCard from "./CurrencyCard";
 import BtnSwitch from "./BtnSwitch";
+import Nav from "./Nav";
 
 export default function CurrencyConverter() {
   const [currencyDB, setcurrencyDB] = useState(null); // currency details fetch from API
   const [exchangeRates, setExchangeRates] = useState(null); // set exchange rates from API
-
-  const reff = useRef("");
-  const reft = useRef("");
 
   const [fromCurrencyId, setFromCurrencyId] = useState();
   const [toCurrencyId, setToCurrencyId] = useState();
@@ -42,9 +40,8 @@ export default function CurrencyConverter() {
       setToCurrencyId(secondCurrency);
       setFromCurrencyName(dbArray[1].name);
       setToCurrencyName(dbArray[0].name);
-      setFromCurrencySymbol(dbArray[1].symbol);
-      setToCurrencySymbol(dbArray[0].symbol);
-      // setFromCurrencyValue(1);
+      setFromCurrencySymbol(dbArray[1].symbol_native);
+      setToCurrencySymbol(dbArray[0].symbol_native);
     });
   }, []);
 
@@ -60,12 +57,6 @@ export default function CurrencyConverter() {
 
   // Handling re-rendering based on the change of the states
   useEffect(() => {
-    // if (!fromCurrencyValue && exchangeRates) {
-    //   setFromCurrencyValue(exchangeRates[`${fromCurrencyId}`]);
-    // } else {
-    // exchangeRates && setFromCurrencyValue(fromCurrencyValue);
-    // const a = ref.current;
-    // console.log("f-t", reft.current.value, toCurrencyValue);
     if (
       exchangeRates &&
       Math.abs(
@@ -85,10 +76,6 @@ export default function CurrencyConverter() {
   }, [exchangeRates, fromCurrencyId, fromCurrencyValue, toCurrencyId]);
 
   useEffect(() => {
-    // console.log("t-f", reff.current.value, fromCurrencyValue);
-    // exchangeRates && setToCurrencyValue(toCurrencyValue);
-    // setToCurrencyValue(reft.current.value);
-    // exchangeRates &&
     if (
       exchangeRates &&
       Math.abs(
@@ -128,19 +115,27 @@ export default function CurrencyConverter() {
     setToCurrencySymbol(symbol);
   };
 
+  // handle Switch Operation
+  const handleSwitchBtn = () => {
+    setFromCurrencyId(toCurrencyId);
+    setFromCurrencyName(toCurrencyName);
+    setFromCurrencySymbol(toCurrencySymbol);
+    setToCurrencyId(fromCurrencyId);
+    setToCurrencyName(fromCurrencyName);
+    setToCurrencySymbol(fromCurrencySymbol);
+  };
   // JSX
   return (
     currencyDB &&
     fromCurrencyId &&
     toCurrencyId && (
-      <div className="container bg-slate-200 p-4">
-        {/* <Nav /> */}
+      <div className="bg-slate-100 h-screen p-4 w-screen md:flex md:flex-col md:justify-center md:-translate-y-8">
+        <Nav />
 
         {/* Main section */}
-        <section className="main relative gap-4">
+        <section className="main relative gap-4 md:flex md:justify-around md:items-center ">
           {currencyDB !== null && (
             <CurrencyCard
-              ref={reff}
               currencyDB={currencyDB}
               currencyId={fromCurrencyId}
               currencyName={fromCurrencyName}
@@ -148,12 +143,17 @@ export default function CurrencyConverter() {
               exchangeValue={fromCurrencyValue}
               handleValue={handleValue}
               handleCurrency={handleCurrencyFrom}
+              className={"md:w-1/3 md:flex-col-reverse"}
             />
           )}
-          <BtnSwitch />
+          <BtnSwitch
+            onClick={handleSwitchBtn}
+            className={
+              "absolute right-8 top-1/2 -translate-y-1/2 md:static md:transform-none"
+            }
+          />
           {currencyDB !== null && (
             <CurrencyCard
-              ref={reft}
               currencyDB={currencyDB}
               currencyId={toCurrencyId}
               currencyName={toCurrencyName}
@@ -161,6 +161,7 @@ export default function CurrencyConverter() {
               exchangeValue={toCurrencyValue}
               handleCurrency={handleCurrencyTo}
               handleValue={handleValue}
+              className={"md:w-1/3"}
               classes={"flex-col-reverse"}
             />
           )}
