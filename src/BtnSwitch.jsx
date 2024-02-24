@@ -1,6 +1,9 @@
-export default function BtnSwitch() {
+export default function BtnSwitch({ onClick, className }) {
   return (
-    <button className="rounded-full p-4  inset ring-[0.8rem] ring-slate-200 absolute right-8 top-1/2 -translate-y-1/2 bg-white">
+    <button
+      className={`rounded-full p-4  inset ring-[0.8rem] ring-slate-300 shadow-2xl shadow-black-200  bg-white ${className}`}
+      onClick={onClick}
+    >
       <svg
         className="filter-accent"
         width="30px"
